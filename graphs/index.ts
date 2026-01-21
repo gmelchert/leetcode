@@ -1,97 +1,155 @@
-class Graph<T> {
-    private adjacencyList: Map<T, Set<T>>;
+import { Queue } from "../queue.ts";
 
-    constructor() {
-        this.adjacencyList = new Map();
+class Graph {
+    isDirected: boolean;
+    vertices: any[];
+    adjList: Map<any, any[]>;
+
+    constructor(isDirected = false) {
+        this.isDirected = isDirected;
+        this.vertices = [];
+        this.adjList = new Map();
     }
 
-    addVertex(vertex: T): void {
-        if (!this.adjacencyList.has(vertex)) {
-            this.adjacencyList.set(vertex, new Set());
+    addVertex(v: number | string) {
+        if (!this.vertices.includes(v)) {
+            this.vertices.push(v);
+            this.adjList.set(v, []);
         }
     }
 
-    // if undirect is true, add edges in both directions
-    addEdge(vertex1: T, vertex2: T, undirect: boolean = true): void {
-        if (!this.adjacencyList.has(vertex1) || !this.adjacencyList.has(vertex2)) {
-            throw new Error("Both vertices must exist in the graph.");
+    addEdge(v: number | string, w: number | string) {
+        if (!this.adjList.get(v)) {
+            this.addVertex(v);
         }
-
-        this.adjacencyList.get(vertex1)!.add(vertex2);
-        if (undirect) {
-            this.adjacencyList.get(vertex2)!.add(vertex1);
+        if (!this.adjList.get(w)) {
+            this.addVertex(w);
+        }
+        
+        this.adjList.get(v)!.push(w);
+        if (!this.isDirected) {
+            this.adjList.get(w)!.push(v);
         }
     }
 
-    /**
-     * Breadth-First Search (BFS)
-     * Useful for finding the shortest path in unweighted graphs
-   */
-    bfs(startNode: T): T[] {
-        const queue: T[] = [startNode];
-        const result: T[] = [];
-        const visited: Set<T> = new Set();
+    getVertices() {
+        return this.vertices;
+    }
 
-        while (queue.length > 0) {
-            const currentNode = queue.shift()!;
-            result.push(currentNode);
+    getAdjList() {
+        return this.adjList;
+    }
 
-            const neighbors = this.adjacencyList.get(currentNode);
-            if (neighbors) {
-                for (const neighbor of neighbors) {
-                    if (!visited.has(neighbor)) {
-                        visited.add(neighbor);
-                        queue.push(neighbor);
-                    }
-                }
-            }
+    toString() {
+        let s = '';
+        for (let i = 0; i < this.vertices.length; i++) {
+            const vertex = this.vertices[i];
+            const neighbors = this.adjList.get(vertex)?.join(' ');
+            s += `${vertex} -> ${neighbors}\n`;
         }
-
-        return result;
-    }
-
-    /**
-     * Depth-First Search (DFS)
-     * Useful for exploring paths and detecting cycles
-    */
-    dfs(startNode: T, visited = new Set<T>(), result: T[] = []): T[] {
-        visited.add(startNode);
-        result.push(startNode);
-
-        const neighbors = this.adjacencyList.get(startNode);
-        if (neighbors) {
-            for (const neighbor of neighbors) {
-                if (!visited.has(neighbor)) {
-                    this.dfs(neighbor, visited, result);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    removeEdge(vertex1: T, vertex2: T): void {
-        this.adjacencyList.get(vertex1)?.delete(vertex2);
-        this.adjacencyList.get(vertex2)?.delete(vertex1);
-    }
-
-    getVertices(): T[] {
-        return Array.from(this.adjacencyList.keys());
+        return s;
     }
 }
 
-// exemplo de uso
-const airportNetwork = new Graph<string>();
+const graph = new Graph();
+const vertices = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 
-airportNetwork.addVertex("JFK");
-airportNetwork.addVertex("LHR");
-airportNetwork.addVertex("CDG");
-airportNetwork.addVertex("GRU");
+for (const v of vertices) {
+    graph.addVertex(v);
+}
 
-airportNetwork.addEdge("JFK", "LHR");
-airportNetwork.addEdge("LHR", "CDG");
-airportNetwork.addEdge("GRU", "JFK");
+graph.addEdge('A', 'B');
+graph.addEdge('A', 'C');
+graph.addEdge('A', 'D');
+graph.addEdge('C', 'D');
+graph.addEdge('C', 'G');
+graph.addEdge('D', 'G');
+graph.addEdge('D', 'H');
+graph.addEdge('B', 'E');
+graph.addEdge('B', 'F');
+graph.addEdge('E', 'I');
 
-console.log("BFS Route Explorer:", airportNetwork.bfs("GRU")); 
-console.log("DFS Route Explorer:", airportNetwork.dfs("GRU")); 
-console.log("Vertices in the graph:", airportNetwork.getVertices());
+// console.log(graph.toString())
+
+const Colors = {
+    WHITE: 0,
+    GREY: 1,
+    BLACK: 2,
+}
+
+const initializeColor = (vertices: any[]) => {
+    const color: Record<string, number> = {};
+    for (const v of vertices) {
+        color[v] = Colors.WHITE;
+    }
+    return color;
+}
+
+// BFS version 1
+const breadthFirstSearch = (graph: Graph, startVertex: string, callback?: (args: any) => void) => {
+    const vertices = graph.getVertices();
+    const adjList = graph.getAdjList();
+    const color = initializeColor(vertices);
+    const queue = new Queue<string>();
+
+    queue.enqueue(startVertex);
+
+    while (!queue.isEmpty()) {
+        const u = queue.dequeue();
+        const neighbors = adjList.get(u)!;
+        color[u] = Colors.GREY;
+        for (let w of neighbors) {
+            if (color[w] === Colors.WHITE) {
+                color[w] = Colors.GREY;
+                queue.enqueue(w);
+            }
+        }
+        color[u] = Colors.BLACK;
+        if (callback) {
+            callback(u);
+        }
+    }
+}
+
+const printVertex = (value: string) => console.log(`Visited vertex: ${value}`);
+// breadthFirstSearch(graph, vertices[0], printVertex);
+
+const BFS = (graph: Graph, startVertex: string) => {
+    const 
+        vertices = graph.getVertices(),
+        adjList = graph.getAdjList(),
+        color = initializeColor(vertices),
+        queue = new Queue<string>(),
+        distances: Record<string, number> = {},
+        predecessors: Record<string, string | null> = {};
+
+    for (const v of vertices) {
+        distances[v] = 0;
+        predecessors[v] = null;
+    }
+        
+    queue.enqueue(startVertex);
+    while(!queue.isEmpty()) {
+        const u = queue.dequeue();
+        const neighbors = adjList.get(u)!;
+        color[u] = Colors.GREY;
+
+        for (const w of neighbors) {
+            if (color[w] === Colors.WHITE) {
+                color[w] = Colors.GREY;
+                distances[w] = distances[u] + 1;
+                predecessors[w] = u;
+                queue.enqueue(w);
+            }
+        }
+        color[u] = Colors.BLACK;
+    }
+
+    return {
+        distances,
+        predecessors,
+    }
+}
+
+const shortestPath = BFS(graph, vertices[0]);
+console.log(shortestPath);
