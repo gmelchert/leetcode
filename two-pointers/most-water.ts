@@ -8,8 +8,6 @@ function maxArea(height: number[]): number {
         const leftContainer = height[left];
         const rightContainer = height[right];
 
-        console.log({right, left, leftContainer, rightContainer})
-
         const newArea = (right - left) * Math.min(leftContainer, rightContainer);
         maxArea = Math.max(maxArea, newArea);
 
@@ -23,4 +21,4 @@ function maxArea(height: number[]): number {
     return maxArea;
 };
 
-console.log(maxArea([1,8,6,2,5,4,8,3,7]))
+console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]))
